@@ -1,23 +1,20 @@
 using API.Data;
+using API.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductsController : ControllerBase
+
+    
+    public class ProductsController(StoreContext _context) : BaseApiController
     {
-        private readonly StoreContext _context;
-
-        public ProductsController(StoreContext context)
-        {
-            _context = context;
-        }
-
-        [HttpGet]
+      
+        [HttpGet] 
         public async Task<IActionResult> GetProducts()
-        {
+        {            
             return Ok(await _context.Products.ToListAsync());
         }
 

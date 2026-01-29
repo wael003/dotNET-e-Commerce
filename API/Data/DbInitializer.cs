@@ -1,29 +1,52 @@
 using System;
 using API.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
 public class DbInitializer
 {
-    public static void InitDb(WebApplication app)
+    public static void InitDb(WebApplication app) 
     {
         using var scope = app.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<StoreContext>()
-        ?? throw new InvalidOperationException("DbContext not found");
+            ?? throw new InvalidOperationException("DbContext not found");
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>()
+            ?? throw new InvalidOperationException("DbContext not found");
 
-        SeedDate(context);
+        _ = SeedData(context, userManager);
     }
 
-    private static void SeedDate(StoreContext context)
+    private static async Task SeedData(StoreContext context, UserManager<User> userManager)
     {
         context.Database.EnsureCreated();
+
+        if (!userManager.Users.Any())
+        {
+            var user = new User
+            {
+                UserName = "wael",
+                Email = "wael@test.com"
+            };
+            await userManager.CreateAsync(user, "Pa$$s0rd");
+            await userManager.AddToRoleAsync(user, "Member");
+
+            var admin = new User
+            {
+                UserName = "admin",
+                Email = "admin@test.com"
+            };
+            await userManager.CreateAsync(admin, "Pa$$s0rd");
+            await userManager.AddToRoleAsync(admin, "Admin");
+        }
+
         // Seed initial data if necessary
-        if(context.Products.Any()) return ;
+        if (context.Products.Any()) return;
 
         var products = new List<Product>
         {
-            	new Product() {
+                new Product() {
                     Name = "Angular Speedster Board 2000",
                     Description =
                         "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas porttitor congue massa. Fusce posuere, magna sed pulvinar ultricies, purus lectus malesuada libero, sit amet commodo magna eros quis urna.",
